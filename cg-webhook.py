@@ -45,7 +45,6 @@ def insert_notification(data: dict):
             messages_json = json.dumps(messages)
 
 
-        # SQL query to insert data into the table
         query = """
         INSERT INTO callgear_notifications (
             notification_time,
@@ -86,17 +85,15 @@ def insert_notification(data: dict):
 async def webhook(request: Request):
     raw_body = await request.body()
     body_text = raw_body.decode("utf-8")
-    print("Original payload:", body_text)
+    # print("Original payload:", body_text)
 
     # Clean up potential double-quoting issues in the JSON string
     cleaned_text = re.sub(r'""(.*?)""', r'"\1"', body_text)
-    print("Cleaned payload:", cleaned_text)
+    #print("Cleaned payload:", cleaned_text)
 
     try:
-        # Parse the cleaned text into a Python dictionary
         data = json.loads(cleaned_text)
     except json.JSONDecodeError as e:
-        # If JSON parsing fails, return a 400 error
         raise HTTPException(status_code=400, detail=f"Failed to parse JSON: {str(e)}")
 
     try:
@@ -110,7 +107,7 @@ async def webhook(request: Request):
 
 @app.get("/")
 def read_root():
-    return {"message": "Webhook, V1.1.0"}
+    return {"message": "Webhook, V1.2.0"}
 
 
 if __name__ == "__main__":# or Run using: uvicorn cg-webhook:app --host 0.0.0.0 --port 8005 --reload
