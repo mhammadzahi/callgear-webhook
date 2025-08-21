@@ -1,0 +1,15 @@
+[Unit]
+Description=Callgear Webhook FASTAPI
+After=network.target
+
+
+[Service]
+User=mohammad
+WorkingDirectory=/home/mohammad/callgear-webhook
+ExecStart=/bin/bash -c 'source /home/mohammad/callgear-webhook/cg-env/bin/activate && python cg-webhook.py'
+Restart=always
+StandardOutput=append:/home/mohammad/callgear-webhook/callgear-webhook.log
+StandardError=append:/home/mohammad/callgear-webhook/callgear-webhook-error.log
+
+[Install]
+WantedBy=multi-user.target
