@@ -1,8 +1,8 @@
 from fastapi import FastAPI, Request, HTTPException
 import psycopg2
 import json
-import os
 import re
+import os
 
 app = FastAPI()
 
@@ -31,8 +31,8 @@ def insert_notification(data: dict):
         data.get("visitor_phone_number"),
         data.get("messages"),
         data.get("employee_full_name"),
-        data.get("visitor_info", {}).get("visitor_name") if data.get("visitor_info") else None,
-        data.get("visitor_info", {}).get("visitor_id") if data.get("visitor_info") else None,
+        data.get("visitor_info", {}).get("visitor_name"),
+        data.get("visitor_info", {}).get("visitor_id"),
         data.get("status", "Open")
     ))
 
@@ -47,19 +47,21 @@ async def webhook(request: Request):
     body_text = raw_body.decode("utf-8")
     print("Original payload:", body_text)
 
-    # Fix invalid JSON: replace ""value"" → "value"
+    # Fix malformed JSON: replace ""value"" → "value"
     cleaned_text = re.sub(r'""(.*?)""', r'"\1"', body_text)
+    print("Cleaned payload:", cleaned_text)
 
     try:
         data = json.loads(cleaned_text)
     except json.JSONDecodeError as e:
-        raise HTTPException(status_code=400, detail=f"Failed to parse JSON after cleaning: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"Failed to parse JSON: {str(e)}")
 
     try:
         insert_notification(data)
         return {"status": "success"}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+
 
 
 
