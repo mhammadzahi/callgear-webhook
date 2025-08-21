@@ -2,6 +2,7 @@ from fastapi import FastAPI, Request, HTTPException
 import psycopg2
 import json
 import os
+import re
 
 app = FastAPI()
 
@@ -28,7 +29,7 @@ def insert_notification(data: dict):
         data.get("notification_time"),
         data.get("chat_id"),
         data.get("visitor_phone_number"),
-        json.dumps(data.get("messages")) if isinstance(data.get("messages"), (dict, list)) else data.get("messages"),
+        data.get("messages"),
         data.get("employee_full_name"),
         data.get("visitor_info", {}).get("visitor_name") if data.get("visitor_info") else None,
         data.get("visitor_info", {}).get("visitor_id") if data.get("visitor_info") else None,
@@ -44,13 +45,15 @@ def insert_notification(data: dict):
 async def webhook(request: Request):
     raw_body = await request.body()
     body_text = raw_body.decode("utf-8")
-    print("Received raw payload:", body_text)  # Debug line
+    print("Original payload:", body_text)
+
+    # Fix invalid JSON: replace ""value"" → "value"
+    cleaned_text = re.sub(r'""(.*?)""', r'"\1"', body_text)
 
     try:
-        data = json.loads(body_text)  # Try normal JSON parsing
-    except json.JSONDecodeError:
-        # Fallback: store raw payload if it's not valid JSON
-        data = {"raw_payload": body_text}
+        data = json.loads(cleaned_text)
+    except json.JSONDecodeError as e:
+        raise HTTPException(status_code=400, detail=f"Failed to parse JSON after cleaning: {str(e)}")
 
     try:
         insert_notification(data)
