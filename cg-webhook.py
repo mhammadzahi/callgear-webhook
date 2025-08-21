@@ -3,11 +3,15 @@ import psycopg2
 import json
 import re
 from datetime import datetime
-import os
 
+
+import os
+from dotenv import load_dotenv
+load_dotenv() 
 app = FastAPI()
 
 DB_URL = os.getenv("DB_URL")
+print(DB_URL)
 
 def insert_notification(data: dict):
     conn = psycopg2.connect(DB_URL)
