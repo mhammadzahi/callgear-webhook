@@ -1,15 +1,15 @@
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
+from typing import Optional, Dict, Any
 import psycopg2
 import os
-from typing import Optional, Any, Dict
 
 app = FastAPI()
 
 DB_URL = os.getenv("DB_URL")
 
 
-# Define the expected payload structure
+# Define Pydantic model to match incoming JSON
 class VisitorInfo(BaseModel):
     visitor_name: Optional[str]
     visitor_id: Optional[str]
@@ -19,10 +19,10 @@ class Notification(BaseModel):
     notification_time: str
     chat_id: str
     visitor_phone_number: Optional[str]
-    messages: Any
+    messages: Optional[str]  # Assuming it's plain text; if JSON, change to Any
     employee_full_name: Optional[str]
     visitor_info: Optional[VisitorInfo]
-    status: Optional[str]
+    status: Optional[str] = "Open"
 
 
 def insert_notification(data: Notification):
@@ -30,7 +30,7 @@ def insert_notification(data: Notification):
     cur = conn.cursor()
 
     query = """
-    INSERT INTO whatsapp_notifications (
+    INSERT INTO callgear_notifications (
         notification_time,
         chat_id,
         visitor_phone_number,
@@ -46,7 +46,7 @@ def insert_notification(data: Notification):
         data.notification_time,
         data.chat_id,
         data.visitor_phone_number,
-        str(data.messages),  # stored as string (can be JSONB if needed)
+        data.messages,
         data.employee_full_name,
         data.visitor_info.visitor_name if data.visitor_info else None,
         data.visitor_info.visitor_id if data.visitor_info else None,
@@ -63,19 +63,17 @@ async def webhook(notification: Notification):
     try:
         insert_notification(notification)
         return {"status": "success"}
-        
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
 
-
 @app.get("/")
 def read_root():
-    return {"message": "API, V1.1.0"}
+    return {"message": "Webhook, V1.1.0"}
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":# or Run using: uvicorn cg-webhook:app --host 0.0.0.0 --port 8005 --reload
     import uvicorn
-    #uvicorn.run("cg-api:app", host="0.0.0.0", port=8005, reload=True)# dev
-    uvicorn.run(app, host="0.0.0.0", port=8005)# prod
+    uvicorn.run("cg-webhook:app", host="0.0.0.0", port=8005, reload=True)# dev
+    #uvicorn.run(app, host="0.0.0.0", port=8005)# prod
