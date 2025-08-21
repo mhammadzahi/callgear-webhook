@@ -112,5 +112,5 @@ def read_root():
 
 if __name__ == "__main__":# or Run using: uvicorn cg-webhook:app --host 0.0.0.0 --port 8005 --reload
     import uvicorn
-    uvicorn.run("cg-webhook:app", host="0.0.0.0", port=8005, reload=True)# dev
-    #uvicorn.run(app, host="0.0.0.0", port=8005)# prod
+    #uvicorn.run("cg-webhook:app", host="0.0.0.0", port=8005, reload=True)# dev
+    uvicorn.run(app, host="0.0.0.0", port=8005)# prod
