@@ -42,17 +42,21 @@ def insert_notification(data: dict):
 
 @app.post("/webhook")
 async def webhook(request: Request):
+    raw_body = await request.body()
+    body_text = raw_body.decode("utf-8")
+    print("Received raw payload:", body_text)  # Debug line
+
     try:
-        raw_body = await request.body()
-        data = json.loads(raw_body.decode("utf-8"))  # Force JSON parsing
-        print(data)
+        data = json.loads(body_text)  # Try normal JSON parsing
+    except json.JSONDecodeError:
+        # Fallback: store raw payload if it's not valid JSON
+        data = {"raw_payload": body_text}
+
+    try:
         insert_notification(data)
         return {"status": "success"}
-    except json.JSONDecodeError:
-        raise HTTPException(status_code=400, detail="Invalid JSON format")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
 
 
 
