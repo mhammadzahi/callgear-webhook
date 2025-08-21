@@ -1,31 +1,13 @@
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
-from typing import Optional, Dict, Any
+from fastapi import FastAPI, Request, HTTPException
 import psycopg2
+import json
 import os
 
 app = FastAPI()
 
 DB_URL = os.getenv("DB_URL")
 
-
-# Define Pydantic model to match incoming JSON
-class VisitorInfo(BaseModel):
-    visitor_name: Optional[str]
-    visitor_id: Optional[str]
-
-
-class Notification(BaseModel):
-    notification_time: str
-    chat_id: str
-    visitor_phone_number: Optional[str]
-    messages: Optional[str]  # Assuming it's plain text; if JSON, change to Any
-    employee_full_name: Optional[str]
-    visitor_info: Optional[VisitorInfo]
-    status: Optional[str] = "Open"
-
-
-def insert_notification(data: Notification):
+def insert_notification(data: dict):
     conn = psycopg2.connect(DB_URL)
     cur = conn.cursor()
 
@@ -43,14 +25,14 @@ def insert_notification(data: Notification):
     """
 
     cur.execute(query, (
-        data.notification_time,
-        data.chat_id,
-        data.visitor_phone_number,
-        data.messages,
-        data.employee_full_name,
-        data.visitor_info.visitor_name if data.visitor_info else None,
-        data.visitor_info.visitor_id if data.visitor_info else None,
-        data.status
+        data.get("notification_time"),
+        data.get("chat_id"),
+        data.get("visitor_phone_number"),
+        json.dumps(data.get("messages")) if isinstance(data.get("messages"), (dict, list)) else data.get("messages"),
+        data.get("employee_full_name"),
+        data.get("visitor_info", {}).get("visitor_name") if data.get("visitor_info") else None,
+        data.get("visitor_info", {}).get("visitor_id") if data.get("visitor_info") else None,
+        data.get("status", "Open")
     ))
 
     conn.commit()
@@ -59,14 +41,18 @@ def insert_notification(data: Notification):
 
 
 @app.post("/webhook")
-async def webhook(notification: Notification):
+async def webhook(request: Request):
     try:
-        print("Received notification:", notification)
-        insert_notification(notification)
+        raw_body = await request.body()
+        data = json.loads(raw_body.decode("utf-8"))  # Force JSON parsing
+        print(data)
+        insert_notification(data)
         return {"status": "success"}
-
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=400, detail="Invalid JSON format")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 
 
