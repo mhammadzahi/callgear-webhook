@@ -61,8 +61,10 @@ def insert_notification(data: Notification):
 @app.post("/webhook")
 async def webhook(notification: Notification):
     try:
+        print("Received notification:", notification)
         insert_notification(notification)
         return {"status": "success"}
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
