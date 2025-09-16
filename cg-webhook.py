@@ -83,12 +83,10 @@ def insert_notification(data: dict):
 
 
 
-
-
 @app.post("/callwebhook")
 async def call_webhook(request: Request):
     raw_body = await request.body()
-    print("Raw payload:", raw_body)
+    #print("Raw payload:", raw_body)
     body_text = raw_body.decode("utf-8")
     # print("Original payload:", body_text)
 
@@ -133,7 +131,7 @@ async def webhook(request: Request):
 
 @app.get("/")
 def read_root():
-    return {"message": "Webhook, V2.2.0"}
+    return {"message": "Webhook, V2.1.0"}
 
 
 if __name__ == "__main__":# or Run using: uvicorn cg-webhook:app --host 0.0.0.0 --port 8005 --reload
