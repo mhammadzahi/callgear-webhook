@@ -81,6 +81,31 @@ def insert_notification(data: dict):
 
 
 
+
+
+
+
+@app.post("/call-webhook")
+async def call_webhook(request: Request):
+    raw_body = await request.body()
+    body_text = raw_body.decode("utf-8")
+    # print("Original payload:", body_text)
+
+    # Clean up potential double-quoting issues in the JSON string
+    # cleaned_text = re.sub(r'""(.*?)""', r'"\1"', body_text)
+    # print("Cleaned payload:", cleaned_text)
+
+    try:
+        print(body_text)
+    except json.JSONDecodeError as e:
+        raise HTTPException(status_code=400, detail=f"Error: {str(e)}")
+
+    except Exception as e:
+        print(f"Database error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+
+
+
 @app.post("/webhook")
 async def webhook(request: Request):
     raw_body = await request.body()
