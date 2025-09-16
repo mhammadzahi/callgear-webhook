@@ -133,7 +133,7 @@ async def webhook(request: Request):
 
 @app.get("/")
 def read_root():
-    return {"message": "Webhook, V1.2.0"}
+    return {"message": "Webhook, V2.2.0"}
 
 
 if __name__ == "__main__":# or Run using: uvicorn cg-webhook:app --host 0.0.0.0 --port 8005 --reload
