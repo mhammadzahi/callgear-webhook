@@ -85,9 +85,10 @@ def insert_notification(data: dict):
 
 
 
-@app.post("/call-webhook")
+@app.post("/callwebhook")
 async def call_webhook(request: Request):
     raw_body = await request.body()
+    print("Raw payload:", raw_body)
     body_text = raw_body.decode("utf-8")
     # print("Original payload:", body_text)
 
